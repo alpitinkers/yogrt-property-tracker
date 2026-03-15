@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Yogrt Property Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f9f9f8;color:#1a1a1a;padding:2rem 1.5rem}
+:root{
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f2f1ee;
+  --color-text-primary:#1a1a1a;
+  --color-text-secondary:#666662;
+  --color-text-tertiary:#999994;
+  --color-border-tertiary:rgba(0,0,0,0.12);
+  --color-border-secondary:rgba(0,0,0,0.22);
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  body{background:#1a1a1a;color:#f0ede8}
+  :root{
+    --color-background-primary:#252523;
+    --color-background-secondary:#2e2d2b;
+    --color-text-primary:#f0ede8;
+    --color-text-secondary:#a8a49e;
+    --color-text-tertiary:#6e6b65;
+    --color-border-tertiary:rgba(255,255,255,0.1);
+    --color-border-secondary:rgba(255,255,255,0.2);
+  }
+}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:20px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px}
+.subtitle{font-size:13px;color:var(--color-text-tertiary);margin-bottom:1.5rem}
+.tabs{display:flex;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1.5rem}
+.tab{padding:8px 16px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;background:transparent;border-top:none;border-left:none;border-right:none}
+.tab:hover{color:var(--color-text-primary)}
+.tab.active{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:500}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem}
+.sec-label{font-size:11px;font-weight:500;letter-spacing:0.07em;color:var(--color-text-tertiary);text-transform:uppercase;margin-bottom:10px}
+.tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:var(--border-radius-md)}
+.t-pass{background:#EAF3DE;color:#3B6D11}
+.t-fail{background:#FCEBEB;color:#A32D2D}
+.t-tbd{background:#F1EFE8;color:#5F5E5A}
+.t-view{background:#E6F1FB;color:#185FA5}
+.t-no{background:#FCEBEB;color:#A32D2D}
+.t-maybe{background:#FAEEDA;color:#854F0B}
+.score-chip{display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;padding:3px 10px;border-radius:var(--border-radius-md);min-width:38px}
+.sc-green{background:#EAF3DE;color:#3B6D11}
+.sc-yellow{background:#FAEEDA;color:#854F0B}
+.sc-red{background:#FCEBEB;color:#A32D2D}
+.sc-gray{background:var(--color-background-secondary);color:var(--color-text-secondary)}
+.prop-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:8px;overflow:hidden}
+.prop-card:hover{border-color:var(--color-border-secondary)}
+.prop-card.sel{border:2px solid #378ADD}
+.prop-img{width:100%;height:300px;object-fit:cover;display:block;background:var(--color-background-secondary)}
+.prop-img-ph{width:100%;height:180px;background:var(--color-background-secondary);display:flex;align-items:center;justify-content:center}
+.prop-body{padding:0.85rem 1.1rem;cursor:pointer}
+.prop-oneliner{padding:0.7rem 1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.avatar{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.av0{background:#E6F1FB;color:#185FA5}
+.av1{background:#EAF3DE;color:#3B6D11}
+.av2{background:#FAEEDA;color:#854F0B}
+.av3{background:#EEEDFE;color:#534AB7}
+.pbar-bg{background:var(--color-background-secondary);border-radius:4px;height:5px;overflow:hidden;flex:1}
+.pbar-fill{height:100%;border-radius:4px;transition:width 0.2s}
+.vbtn{padding:5px 12px;font-size:12px;font-weight:500;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.vbtn:hover{background:var(--color-background-secondary)}
+.vbtn.av{background:#E6F1FB;color:#185FA5;border-color:#85B7EB}
+.vbtn.an{background:#FCEBEB;color:#A32D2D;border-color:#F09595}
+.vbtn.am{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+.metric-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px}
+.metric-val{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.metric-lbl{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+input[type=range]{width:100%;accent-color:#378ADD}
+select,input[type=text],textarea{font-family:inherit;font-size:13px;color:var(--color-text-primary);background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:7px 9px;width:100%}
+textarea{resize:vertical}
+.note-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px 10px;font-size:13px;color:var(--color-text-primary);width:100%;resize:none;font-family:inherit}
+.add-btn{padding:8px 16px;font-size:13px;font-weight:500;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);cursor:pointer;background:var(--color-background-secondary);color:var(--color-text-primary)}
+.add-btn:hover{background:var(--color-background-primary)}
+.nav-arrow{width:32px;height:32px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--color-text-secondary);flex-shrink:0}
+.nav-arrow:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.nav-arrow:disabled{opacity:0.3;cursor:default}
+.lock-btn{padding:5px 12px;font-size:12px;font-weight:500;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.lock-btn.locked{background:#FCEBEB;color:#A32D2D;border-color:#F09595}
+.locked-overlay{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px;margin-top:8px;font-size:12px;color:#A32D2D;text-align:center;border:0.5px solid #F09595}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-green{background:#639922}
+.dot-gray{background:#888780}
+.dot-red{background:#E24B4A}
+.crit-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:7px}
+.crit-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.hard-summary-row{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#293A27;border-radius:var(--border-radius-md);cursor:pointer;margin-bottom:4px;border:0.5px solid #1e2b1d}
+.hard-summary-row:hover{background:#1e2b1d}
+.hcrit-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:#1e2b1d;border-radius:var(--border-radius-md)}
+.hcrit-dd{font-family:inherit;font-size:11px;font-weight:500;border-radius:var(--border-radius-md);padding:2px 4px;cursor:pointer;border:none;flex-shrink:0;width:52px;appearance:none;-webkit-appearance:none;text-align:center}
+.hcrit-dd-pass{background:#EAF3DE;color:#3B6D11}
+.hcrit-dd-fail{background:#FCEBEB;color:#A32D2D}
+.hcrit-dd-tbd{background:#F1EFE8;color:#5F5E5A}
+.err-msg{font-size:12px;color:#A32D2D;margin-top:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Yogrt Property Tracker</h1>
+  <p class="subtitle">Agency hub search — live/work/studio space shortlist</p>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="list">Shortlist</button>
+    <button class="tab" data-tab="add">Add</button>
+    <button class="tab" data-tab="summary">Summary</button>
+  </div>
+  <div id="pane-list"></div>
+  <div id="pane-score" style="display:none"></div>
+  <div id="pane-add" style="display:none"></div>
+  <div id="pane-summary" style="display:none"></div>
+</div>
+
+<script>
+const PEOPLE=[
+  {key:"koko",label:"Koko",av:"KO",cls:"av0"},
+  {key:"baran",label:"Baran",av:"BA",cls:"av1"},
+  {key:"alpi",label:"Alpi",av:"AL",cls:"av2"},
+  {key:"simon",label:"Simon",av:"SI",cls:"av3"},
+];
+const HARD=[
+  {key:"beds",label:"5 bedrooms",field:"beds_override"},
+  {key:"baths",label:"3+ bathrooms",field:"baths_override"},
+  {key:"rent",label:"Rent <= £7,000/mo",field:"rent_override"},
+  {key:"sqft",label:"Size > 2,000 sq ft",field:"sqft_override"},
+  {key:"station",label:"Station <= 15 min walk",field:"station_override"},
+  {key:"office",label:"Office room",field:"office_override",owners:"Koko, Baran"},
+  {key:"hero",label:"Hero space filmable",field:"hero_override",owners:"Koko, Baran"},
+  {key:"bedroom4",label:"Livable 4th bedroom",field:"bedroom4_override"},
+  {key:"guestroom",label:"Guest room",field:"guestroom_override"},
+];
+const SOFT=[
+  {key:"light",label:"Natural light & feel"},
+  {key:"separation",label:"Work-life separation"},
+  {key:"neighbourhood",label:"Neighbourhood"},
+  {key:"condition",label:"Condition / move-in ready"},
+  {key:"logistics",label:"Kit & crew logistics"},
+  {key:"gut",label:"Gut feeling"},
+];
+
+function mkScores(){return SOFT.reduce((o,s)=>{o[s.key]=3;return o;},{})}
+function mkFeedback(){return PEOPLE.reduce((o,p)=>{o[p.key]={scores:mkScores(),note:"",verdict:"",locked:false};return o;},{})}
+function mkOverrides(){return{beds_override:null,baths_override:null,rent_override:null,sqft_override:null,station_override:null,office_override:null,hero_override:null,bedroom4_override:null,guestroom_override:null};}
+
+function autoStatus(p,c){
+  if(c.key==="beds")return p.beds>=5?"pass":"fail";
+  if(c.key==="baths")return p.baths>=3?"pass":"fail";
+  if(c.key==="rent")return(p.rent>0&&p.rent<=7000)?"pass":(p.rent===0?"tbd":"fail");
+  if(c.key==="sqft")return p.sqft>2000?"pass":(p.sqft===0?"tbd":"fail");
+  if(c.key==="station")return(p.station>0&&p.station<=15)?"pass":(p.station===0||p.station===99?"tbd":"fail");
+  const v=p[c.key];if(v==="yes")return"pass";if(v==="no")return"fail";return"tbd";
+}
+function critStatus(p,c){const ov=p[c.field];return(ov&&["pass","fail","tbd"].includes(ov))?ov:autoStatus(p,c);}
+function hardPassCount(p){return HARD.filter(c=>critStatus(p,c)==="pass").length;}
+function hardFailCount(p){return HARD.filter(c=>critStatus(p,c)==="fail").length;}
+function hardTBDCount(p){return HARD.filter(c=>critStatus(p,c)==="tbd").length;}
+function hardStatus(p){
+  if(HARD.some(c=>critStatus(p,c)==="fail"))return"fail";
+  if(HARD.some(c=>critStatus(p,c)==="tbd"))return"tbd";
+  return"pass";
+}
+function hardTag(p){
+  const s=hardStatus(p);
+  if(s==="fail")return`<span class="tag t-fail">Hard fail</span>`;
+  if(s==="tbd")return`<span class="tag t-tbd">TBD items</span>`;
+  return`<span class="tag t-pass">Passes all</span>`;
+}
+function statusTag(s){
+  if(s==="pass")return`<span class="tag t-pass" style="font-size:10px">Pass</span>`;
+  if(s==="fail")return`<span class="tag t-fail" style="font-size:10px">Fail</span>`;
+  return`<span class="tag t-tbd" style="font-size:10px">TBD</span>`;
+}
+function verdictTag(v){
+  if(v==="view")return`<span class="tag t-view">Worth viewing</span>`;
+  if(v==="no")return`<span class="tag t-no">No</span>`;
+  if(v==="maybe")return`<span class="tag t-maybe">Maybe</span>`;
+  return`<span class="tag t-tbd">No verdict</span>`;
+}
+function teamVerdict(p){
+  const c={view:0,maybe:0,no:0};
+  PEOPLE.forEach(per=>{const v=p.feedback[per.key].verdict;if(c[v]!==undefined)c[v]++;});
+  if(c.view>=2)return"view";if(c.no>=2)return"no";return"maybe";
+}
+function verdictCounts(p){
+  const c={view:0,maybe:0,no:0};
+  PEOPLE.forEach(per=>{const v=p.feedback[per.key].verdict;if(c[v]!==undefined)c[v]++;});
+  return c;
+}
+function avgScore(p){
+  let t=0;PEOPLE.forEach(per=>{SOFT.forEach(s=>{t+=(p.feedback[per.key].scores[s.key]||0);});});
+  return Math.round(t/PEOPLE.length);
+}
+function personTotal(p,pkey){return SOFT.reduce((s,sc)=>s+(p.feedback[pkey].scores[sc.key]||0),0);}
+function scoreColor(v){return v>22?"sc-green":v<=12?"sc-red":"sc-yellow"}
+function pbarColor(v){return v>22?"#639922":v<=12?"#E24B4A":"#BA7517"}
+function dotForCrit(p,c){
+  const s=critStatus(p,c);
+  if(s==="pass")return`<span class="dot dot-green"></span>`;
+  if(s==="fail")return`<span class="dot dot-red"></span>`;
+  return`<span class="dot dot-gray"></span>`;
+}
+function getOGImage(url){
+  if(!url)return null;
+  try{
+    const u=new URL(url);const host=u.hostname.replace(/^www\./,"");
+    if(host.includes("rightmove.co.uk")){const m=url.match(/property-(\d+)/);if(m)return`https://media.rightmove.co.uk/dir/crop/10:9-16:9/${m[1]}/house.jpg`;}
+    if(host.includes("zoopla.co.uk")){const m=url.match(/(\d{8,})/);if(m)return`https://lid.zoocdn.com/u/2400/1800/${m[1]}.jpg`;}
+    if(host.includes("onthemarket.com")){const m=url.match(/(\d{8,})/);if(m)return`https://media.onthemarket.com/properties/${m[1]}/image-0-thumb-800x600.jpg`;}
+  }catch(e){}
+  return null;
+}
+function imgHTML(p){
+  const ph=`<div class="prop-img-ph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="opacity:0.2"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.5"/></svg></div>`;
+  if(!p.url)return ph;const src=getOGImage(p.url);if(!src)return ph;
+  return`<img class="prop-img" src="${src}" alt="" onerror="this.outerHTML='${ph.replace(/'/g,"\\'")}'"/>`;
+}
+function isMinimised(p){return avgScore(p)<15||hardStatus(p)==="fail";}
+function sortedProps(){
+  return[...props].sort((a,b)=>{
+    const as=hardStatus(a),bs=hardStatus(b);
+    if(as==="fail"&&bs!=="fail")return 1;if(bs==="fail"&&as!=="fail")return-1;
+    return avgScore(b)-avgScore(a);
+  });
+}
+
+let props=[
+  {id:1,name:"14 Victoria Road, N4",rent:6500,beds:5,baths:3,sqft:2200,station:8,office:"yes",hero:"tbd",bedroom4:"tbd",guestroom:"tbd",url:"",feedback:mkFeedback(),...mkOverrides()},
+];
+let selId=props[0].id;
+let scorePage=0;
+let hardExpanded=false;
+let hardLocked=false;
+
+function renderList(){
+  const el=document.getElementById("pane-list");
+  const sorted=sortedProps();
+  el.innerHTML=sorted.map(p=>{
+    const avg=avgScore(p);const mini=isMinimised(p);const sel=p.id===selId;
+    if(mini){
+      return`<div class="prop-card ${sel?"sel":""}">
+        <div class="prop-oneliner" onclick="selProp(${p.id})">
+          <div style="flex:1;min-width:0">
+            <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">${p.name}</span>
+            <span style="font-size:12px;color:var(--color-text-tertiary);margin-left:8px">£${p.rent?p.rent.toLocaleString():"?"}/mo · ${p.beds||"?"}bed</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${hardTag(p)}<span class="score-chip ${scoreColor(avg)}">${avg}/30</span></div>
+        </div>
+      </div>`;
+    }
+    const notes=PEOPLE.map(per=>{
+      const n=p.feedback[per.key].note;if(!n)return"";
+      return`<div style="display:flex;gap:7px;align-items:flex-start;margin-top:5px"><div class="avatar ${per.cls}">${per.av}</div><span style="font-size:12px;color:var(--color-text-secondary);line-height:1.5;flex:1">${n}</span></div>`;
+    }).filter(Boolean).join("");
+    const critGrid=`<div class="crit-grid">${HARD.map(c=>`<div class="crit-item">${dotForCrit(p,c)}<span>${c.label}</span></div>`).join("")}</div>`;
+    return`<div class="prop-card ${sel?"sel":""}">
+      ${imgHTML(p)}
+      <div class="prop-body" onclick="selProp(${p.id})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">${p.name}</div>
+            <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:2px">£${p.rent?p.rent.toLocaleString():"?"}/mo · ${p.beds||"?"}bed · ${p.baths||"?"}bath · ${p.sqft||"?"}sqft · ${p.station||"?"}min station</div>
+            ${critGrid}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;margin-left:8px">${hardTag(p)}<span class="score-chip ${scoreColor(avg)}">${avg}/30</span>${verdictTag(teamVerdict(p))}</div>
+        </div>
+        ${notes?`<div style="margin-top:8px;padding-top:8px;border-top:0.5px solid var(--color-border-tertiary)">${notes}</div>`:""}
+      </div>
+    </div>`;
+  }).join("")||`<p style="font-size:13px;color:var(--color-text-tertiary)">No properties yet.</p>`;
+}
+
+function ddClass(s){return s==="pass"?"hcrit-dd-pass":s==="fail"?"hcrit-dd-fail":"hcrit-dd-tbd";}
+
+function hardCritEditorHTML(p){
+  const passC=hardPassCount(p),failC=hardFailCount(p),tbdC=hardTBDCount(p);
+  const summaryRow=`<div class="hard-summary-row" onclick="hardExpanded=!hardExpanded;renderScore()">
+    <div style="display:flex;gap:8px;align-items:center;flex:1">
+      <span style="font-size:13px;font-weight:500;color:#9FE1CB">Hard criteria met — ${passC}/${HARD.length}</span>
+      ${failC?`<span class="tag t-fail">${failC} fail</span>`:""}
+      ${tbdC?`<span class="tag t-tbd">${tbdC} TBD</span>`:""}
+      ${!failC&&!tbdC?`<span class="tag t-pass">All pass</span>`:""}
+    </div>
+    <span style="font-size:12px;color:#5DCAA5">${hardExpanded?"Hide":"Expand"}</span>
+  </div>`;
+  if(!hardExpanded)return`${summaryRow}<div style="margin-bottom:1.5rem"></div>`;
+  const cells=HARD.map(c=>{
+    const s=critStatus(p,c);
+    const ownerSpan=c.owners?` <span style="font-size:10px;color:#5DCAA5">${c.owners}</span>`:"";
+    if(hardLocked){
+      return`<div class="hcrit-row"><span style="font-size:12px;color:#9FE1CB;flex:1">${c.label}${ownerSpan}</span>${statusTag(s)}</div>`;
+    }
+    return`<div class="hcrit-row">
+      <span style="font-size:12px;color:#9FE1CB;flex:1;min-width:0">${c.label}${ownerSpan}</span>
+      <select class="hcrit-dd ${ddClass(s)}" onchange="updateHardOverride(${p.id},'${c.field}',this.value);this.className='hcrit-dd '+ddClass(this.value)">
+        <option value="pass" ${s==="pass"?"selected":""}>Pass</option>
+        <option value="fail" ${s==="fail"?"selected":""}>Fail</option>
+        <option value="tbd" ${s==="tbd"?"selected":""}>TBD</option>
+      </select>
+    </div>`;
+  });
+  const lockCell=`<div class="hcrit-row" style="justify-content:center">
+    <button class="lock-btn ${hardLocked?"locked":""}" style="width:100%;font-size:12px" onclick="hardLocked=!hardLocked;renderScore()">${hardLocked?"Locked":"Lock criteria"}</button>
+  </div>`;
+  const allCells=[...cells,lockCell];
+  const rows=[];
+  for(let i=0;i<allCells.length;i+=2){rows.push(`<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${allCells[i]}${allCells[i+1]||""}</div>`);}
+  return`${summaryRow}<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:1.5rem;padding:8px;background:#293A27;border-radius:var(--border-radius-md);border:0.5px solid #1e2b1d">${rows.join("")}</div>`;
+}
+
+function updateHardOverride(pid,field,val){
+  const p=props.find(x=>x.id===pid);if(!p||hardLocked)return;
+  p[field]=val;renderList();
+}
+
+function renderScore(){
+  const p=props.find(x=>x.id===selId);
+  const el=document.getElementById("pane-score");
+  if(!p){el.innerHTML=`<p style="font-size:13px;color:var(--color-text-tertiary)">Select a property.</p>`;return;}
+  const pages=["overview",...PEOPLE.map(x=>x.key)];
+  const currentPage=pages[Math.min(scorePage,pages.length-1)];
+  let pageContent="";
+  if(currentPage==="overview"){
+    const avg=avgScore(p);const vc=verdictCounts(p);
+    const softRows=SOFT.map(s=>{
+      const av=Math.round(PEOPLE.reduce((sum,per)=>sum+(p.feedback[per.key].scores[s.key]||0),0)/PEOPLE.length);
+      const pct=Math.round((av/5)*100);
+      return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
+        <span style="font-size:13px;color:var(--color-text-secondary);flex:1">${s.label}</span>
+        <div class="pbar-bg" style="width:80px"><div class="pbar-fill" style="width:${pct}%;background:#378ADD"></div></div>
+        <span style="font-size:13px;font-weight:500;min-width:28px;text-align:right;color:var(--color-text-primary)">${av}/5</span>
+      </div>`;
+    }).join("");
+    const notesRows=PEOPLE.map(per=>{
+      const n=p.feedback[per.key].note;
+      return`<div style="display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
+        <div class="avatar ${per.cls}">${per.av}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:1px">${per.label}</div>
+          <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.5">${n||`<span style="color:var(--color-text-tertiary);font-style:italic">No note yet</span>`}</div>
+        </div>
+        ${p.feedback[per.key].verdict?verdictTag(p.feedback[per.key].verdict):""}
+      </div>`;
+    }).join("");
+    pageContent=`
+      <div class="sec-label">Soft score averages</div>
+      <div class="card" style="margin-bottom:1.5rem">${softRows}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.5rem">
+        <div class="metric-card"><div class="metric-val"><span class="score-chip ${scoreColor(avg)}" style="font-size:17px;padding:3px 10px">${avg}</span></div><div class="metric-lbl">Team avg /30</div></div>
+        <div class="metric-card"><div style="font-size:20px;font-weight:500;color:#3B6D11">${vc.view}</div><div class="metric-lbl">Worth viewing</div></div>
+        <div class="metric-card"><div style="font-size:20px;font-weight:500;color:#854F0B">${vc.maybe}</div><div class="metric-lbl">Maybe</div></div>
+        <div class="metric-card"><div style="font-size:20px;font-weight:500;color:#A32D2D">${vc.no}</div><div class="metric-lbl">No</div></div>
+      </div>
+      <div class="sec-label">One-liner comment</div>
+      <div class="card">${notesRows}</div>`;
+  } else {
+    const per=PEOPLE.find(x=>x.key===currentPage);
+    const f=p.feedback[per.key];const isLocked=f.locked;const pt=personTotal(p,per.key);
+    const rows=SOFT.map(s=>{
+      const val=f.scores[s.key]!==undefined?f.scores[s.key]:3;
+      if(isLocked){
+        const pct=Math.round((val/5)*100);
+        return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
+          <span style="font-size:13px;color:var(--color-text-secondary);flex:1">${s.label}</span>
+          <div class="pbar-bg" style="width:80px"><div class="pbar-fill" style="width:${pct}%;background:#378ADD"></div></div>
+          <span style="font-size:13px;font-weight:500;min-width:28px;text-align:right">${val}/5</span>
+        </div>`;
+      }
+      return`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
+        <span style="font-size:13px;color:var(--color-text-secondary);flex:1">${s.label}</span>
+        <input type="range" min="1" max="5" step="1" value="${val}" style="width:80px" oninput="updateScore(${p.id},'${per.key}','${s.key}',this.value);document.getElementById('sv-${p.id}-${per.key}-${s.key}').textContent=this.value;refreshAll()"/>
+        <span style="font-size:13px;font-weight:500;min-width:28px;text-align:right" id="sv-${p.id}-${per.key}-${s.key}">${val}</span>
+      </div>`;
+    }).join("");
+    pageContent=`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem">
+        <div class="avatar ${per.cls}" style="width:34px;height:34px;font-size:12px">${per.av}</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:500;color:var(--color-text-primary)">${per.label}</div></div>
+        <span class="score-chip ${scoreColor(pt)}">${pt}/30</span>
+        <button class="lock-btn ${isLocked?"locked":""}" onclick="toggleLock(${p.id},'${per.key}')">${isLocked?"Locked":"Lock"}</button>
+      </div>
+      <div class="card" style="margin-bottom:10px">${rows}</div>
+      ${isLocked?`<div class="locked-overlay">Scoring locked by ${per.label}</div>`:`
+      <textarea class="note-box" rows="2" placeholder="One-liner comment..." oninput="updateNote(${p.id},'${per.key}',this.value)">${f.note||""}</textarea>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="vbtn ${f.verdict==="view"?"av":""}" onclick="setVerdict(${p.id},'${per.key}','view');renderScore()">Worth viewing</button>
+        <button class="vbtn ${f.verdict==="maybe"?"am":""}" onclick="setVerdict(${p.id},'${per.key}','maybe');renderScore()">Maybe</button>
+        <button class="vbtn ${f.verdict==="no"?"an":""}" onclick="setVerdict(${p.id},'${per.key}','no');renderScore()">No</button>
+      </div>`}`;
+  }
+  const pageLabel=currentPage==="overview"?"Overview":PEOPLE.find(x=>x.key===currentPage)?.label||"";
+  const dots=pages.map((_,i)=>`<span style="width:6px;height:6px;border-radius:50%;background:${i===scorePage?"var(--color-text-primary)":"rgba(0,0,0,0.2)"};display:inline-block"></span>`).join("");
+  el.innerHTML=`
+    <div style="margin-bottom:8px"><button onclick="switchTab('list')" style="padding:5px 10px;font-size:12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;color:var(--color-text-secondary)">&#8592; Shortlist</button></div>
+    <div style="margin-bottom:1.25rem">
+      <div style="font-size:18px;font-weight:500;color:var(--color-text-primary)">${p.name}</div>
+      <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:2px">£${p.rent?p.rent.toLocaleString():"?"}/mo · ${p.beds||"?"}bed · ${p.baths||"?"}bath · ${p.sqft||"?"}sqft</div>
+    </div>
+    ${hardCritEditorHTML(p)}
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+      <button class="nav-arrow" onclick="navScore(-1)" ${scorePage===0?"disabled":""}>&#8592;</button>
+      <div style="flex:1;text-align:center">
+        <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">${pageLabel}</div>
+        <div style="display:flex;gap:4px;justify-content:center;margin-top:5px">${dots}</div>
+      </div>
+      <button class="nav-arrow" onclick="navScore(1)" ${scorePage>=pages.length-1?"disabled":""}>&#8594;</button>
+    </div>
+    ${pageContent}`;
+}
+
+function navScore(dir){
+  const pages=["overview",...PEOPLE.map(x=>x.key)];
+  scorePage=Math.max(0,Math.min(pages.length-1,scorePage+dir));renderScore();
+}
+function toggleLock(pid,pkey){
+  const p=props.find(x=>x.id===pid);if(!p)return;p.feedback[pkey].locked=!p.feedback[pkey].locked;renderScore();refreshAll();
+}
+function updateScore(pid,pkey,skey,val){const p=props.find(x=>x.id===pid);if(p&&!p.feedback[pkey].locked)p.feedback[pkey].scores[skey]=parseInt(val);}
+function updateNote(pid,pkey,val){const p=props.find(x=>x.id===pid);if(p)p.feedback[pkey].note=val;}
+function setVerdict(pid,pkey,v){const p=props.find(x=>x.id===pid);if(!p)return;p.feedback[pkey].verdict=v;}
+function refreshAll(){renderList();}
+
+function renderAdd(){
+  document.getElementById("pane-add").innerHTML=`<div class="card">
+    <div class="sec-label" style="margin-bottom:14px">New property</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div style="grid-column:1/-1"><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Name / address</div><input type="text" id="n-name" placeholder="e.g. 7 Coldharbour Lane, SE5"/></div>
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Rent (£/mo)</div><input type="text" id="n-rent" placeholder="6800"/></div>
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Bedrooms</div><input type="text" id="n-beds" placeholder="5"/></div>
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Bathrooms</div><input type="text" id="n-baths" placeholder="3"/></div>
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Size (sq ft)</div><input type="text" id="n-sqft" placeholder="2200"/></div>
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Walk to station (mins)</div><input type="text" id="n-station" placeholder="10"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Office room <span style="color:var(--color-text-tertiary)">(Koko, Baran)</span></div><select id="n-office"><option value="tbd">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Hero space filmable <span style="color:var(--color-text-tertiary)">(Koko, Baran)</span></div><select id="n-hero"><option value="tbd">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Livable 4th bedroom</div><select id="n-bed4"><option value="tbd">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+      <div><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Guest room</div><select id="n-guest"><option value="tbd">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+    </div>
+    <div style="margin-bottom:6px"><div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:3px">Listing URL (Rightmove, Zoopla or OnTheMarket)</div><input type="text" id="n-url" placeholder="https://www.rightmove.co.uk/properties/..."/></div>
+    <div id="url-err" class="err-msg" style="display:none"></div>
+    <div style="margin-top:12px"><button class="add-btn" onclick="addProp()">Add to shortlist</button></div>
+  </div>`;
+}
+
+function addProp(){
+  const name=document.getElementById("n-name").value.trim();if(!name)return;
+  const url=document.getElementById("n-url").value.trim();
+  const errEl=document.getElementById("url-err");
+  if(url){const dup=props.find(x=>x.url&&x.url.trim()===url);if(dup){errEl.textContent=`Already added as "${dup.name}"`;errEl.style.display="block";return;}}
+  errEl.style.display="none";
+  const p={id:Date.now(),name,rent:parseInt(document.getElementById("n-rent").value)||0,beds:parseInt(document.getElementById("n-beds").value)||0,baths:parseInt(document.getElementById("n-baths").value)||0,sqft:parseInt(document.getElementById("n-sqft").value)||0,station:parseInt(document.getElementById("n-station").value)||99,office:document.getElementById("n-office").value,hero:document.getElementById("n-hero").value,bedroom4:document.getElementById("n-bed4").value,guestroom:document.getElementById("n-guest").value,url,feedback:mkFeedback(),...mkOverrides()};
+  props.push(p);selId=p.id;scorePage=0;hardExpanded=false;hardLocked=false;switchTab("score");
+}
+
+function renderSummary(){
+  const total=props.length,passing=props.filter(p=>hardStatus(p)!=="fail").length,viewing=props.filter(p=>teamVerdict(p)==="view").length;
+  const sorted=sortedProps();
+  const rows=sorted.map((p,i)=>{
+    const avg=avgScore(p),pct=Math.round((avg/30)*100);
+    return`<div style="padding:11px 0;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px">
+      <span style="font-size:13px;color:var(--color-text-tertiary);min-width:16px">${i+1}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">${p.name}</div>
+        <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:1px">£${p.rent?p.rent.toLocaleString():"?"}/mo · ${p.beds||"?"}bed · ${p.sqft||"?"}sqft</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:5px">
+          <div class="pbar-bg"><div class="pbar-fill" style="width:${pct}%;background:${pbarColor(avg)}"></div></div>
+          <span class="score-chip ${scoreColor(avg)}" style="font-size:12px">${avg}/30</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">${hardTag(p)}${verdictTag(teamVerdict(p))}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("pane-summary").innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem">
+      <div class="metric-card"><div class="metric-val">${total}</div><div class="metric-lbl">On shortlist</div></div>
+      <div class="metric-card"><div class="metric-val">${passing}</div><div class="metric-lbl">Pass hard filter</div></div>
+      <div class="metric-card"><div class="metric-val">${viewing}</div><div class="metric-lbl">Worth viewing</div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)"><span class="score-chip sc-green" style="font-size:11px">22+</span> Strong</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)"><span class="score-chip sc-yellow" style="font-size:11px">13–22</span> Consider</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-text-secondary)"><span class="score-chip sc-red" style="font-size:11px">12 or under</span> Weak</div>
+    </div>
+    <div class="sec-label">Ranked by team average</div>
+    ${rows||`<p style="font-size:13px;color:var(--color-text-tertiary)">No properties yet.</p>`}`;
+}
+
+function selProp(id){selId=id;scorePage=0;hardExpanded=false;hardLocked=false;switchTab("score");}
+function switchTab(name){
+  ["list","score","add","summary"].forEach(t=>{document.getElementById("pane-"+t).style.display=t===name?"block":"none";});
+  document.querySelectorAll(".tab").forEach(el=>{el.classList.toggle("active",el.dataset.tab===name);});
+  if(name==="list")renderList();if(name==="score")renderScore();if(name==="add")renderAdd();if(name==="summary")renderSummary();
+}
+document.querySelectorAll(".tab").forEach(t=>{t.addEventListener("click",()=>switchTab(t.dataset.tab));});
+renderList();
+</script>
+</body>
+</html>
